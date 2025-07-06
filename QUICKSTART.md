@@ -22,18 +22,24 @@ Get your Penny Stock Trading Application running in minutes!
 
 ## 🎯 Launch Application
 
-### Option 1: Web Dashboard (Recommended)
+### Option 1: Dash Web Dashboard (Recommended)
 ```bash
 python main.py
 ```
 Then open: `http://localhost:8050`
 
-### Option 2: Command Line
+### Option 2: Flask Web Application
+```bash
+python web_app.py
+```
+Then open: `http://localhost:5000`
+
+### Option 3: Command Line
 ```bash
 python main.py --mode cli
 ```
 
-### Option 3: Demo Mode
+### Option 4: Demo Mode
 ```bash
 python demo.py
 ```

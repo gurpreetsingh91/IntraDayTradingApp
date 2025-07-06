@@ -23,10 +23,12 @@ A sophisticated intraday trading application designed specifically for penny sto
 - **Real-time Risk Monitoring** - Continuously monitors portfolio risk metrics
 
 ### 📊 Modern Web Interface
-- **Real-time Dashboard** - Beautiful, responsive web interface
+- **Dual Web Interfaces** - Choose between Dash or Flask-based web applications
+- **Real-time Dashboard** - Beautiful, responsive web interface with live updates
 - **Portfolio Analytics** - Comprehensive portfolio performance tracking
 - **Trading Opportunities** - Live scanning and display of trading opportunities
 - **Performance Charts** - Visual representation of portfolio growth and profit distribution
+- **Interactive Controls** - One-click trading, scanning, and position management
 
 ## 🏗️ Technical Architecture
 
@@ -82,8 +84,22 @@ python main.py --mode cli
 
 ## 🎮 Using the Application
 
+### Web Interface Options
+
+**Option 1: Dash Dashboard (Default)**
+```bash
+python main.py
+```
+Access at: `http://localhost:8050`
+
+**Option 2: Flask Web Application**
+```bash
+python web_app.py
+```
+Access at: `http://localhost:5000`
+
 ### Dashboard Overview
-The main dashboard provides:
+Both web interfaces provide:
 - **Portfolio Metrics** - Real-time portfolio status
 - **Trading Controls** - Scan opportunities, execute trades, update positions
 - **Opportunities Table** - Live trading opportunities with buy buttons

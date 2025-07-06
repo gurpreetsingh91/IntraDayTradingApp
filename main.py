@@ -79,6 +79,7 @@ def run_dashboard():
         print(f"Stop Loss: {Config.STOP_LOSS_PERCENTAGE*100}%")
         print(f"Take Profit: {Config.TAKE_PROFIT_PERCENTAGE*100}%")
         print("="*60)
+        print("💡 Alternative UI: Run 'python web_app.py' for Flask interface")
         print("Press Ctrl+C to stop the application")
         print("="*60 + "\n")
         
