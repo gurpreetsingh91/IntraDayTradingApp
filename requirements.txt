@@ -1,0 +1,13 @@
+pandas==2.0.3
+numpy==1.24.3
+yfinance==0.2.18
+plotly==5.15.0
+dash==2.11.1
+dash-bootstrap-components==1.4.1
+requests==2.31.0
+python-dotenv==1.0.0
+schedule==1.2.0
+matplotlib==3.7.1
+seaborn==0.12.2
+flask==2.3.2
+sqlalchemy==2.0.19

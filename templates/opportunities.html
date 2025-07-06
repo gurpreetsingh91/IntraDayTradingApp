@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Trading Opportunities - Penny Stock Trader{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h1 class="card-title mb-0">
+                    <i class="fas fa-search-dollar me-3"></i>Trading Opportunities
+                </h1>
+                <p class="card-text mt-2 mb-0">
+                    Real-time penny stock opportunities with risk-managed position sizing
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <button class="btn btn-primary btn-lg w-100 mb-2" id="scanOpportunities">
+            <i class="fas fa-sync-alt me-2"></i>Refresh Opportunities
+        </button>
+    </div>
+    <div class="col-md-6">
+        <div class="alert alert-info mb-0" id="scanStatus">
+            <i class="fas fa-info-circle me-2"></i>
+            Showing current market opportunities
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>Available Opportunities
+                </h5>
+                <span class="badge bg-primary">{{ opportunities|length }} Found</span>
+            </div>
+            <div class="card-body">
+                {% if opportunities %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Current Price</th>
+                                    <th>Daily Change</th>
+                                    <th>Volume</th>
+                                    <th>Confidence</th>
+                                    <th>Position Size</th>
+                                    <th>Investment</th>
+                                    <th>Stop Loss</th>
+                                    <th>Take Profit</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for opp in opportunities %}
+                                <tr>
+                                    <td><strong>{{ opp.symbol }}</strong></td>
+                                    <td>${{ opp.price|round(2) }}</td>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            +{{ opp.change_percent|round(1) }}%
+                                        </span>
+                                    </td>
+                                    <td>{{ "{:,}".format(opp.volume) }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 25px;">
+                                            <div class="progress-bar" role="progressbar" 
+                                                 style="width: {{ (opp.confidence * 100)|round(0) }}%;">
+                                                {{ (opp.confidence * 100)|round(0) }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ opp.suggested_position_size }} shares</td>
+                                    <td>${{ (opp.suggested_position_size * opp.price)|round(2) }}</td>
+                                    <td class="text-danger">${{ opp.stop_loss|round(2) }}</td>
+                                    <td class="text-success">${{ opp.take_profit|round(2) }}</td>
+                                    <td>
+                                        <button class="btn btn-success buy-btn" 
+                                                data-symbol="{{ opp.symbol }}" 
+                                                data-price="{{ opp.price }}" 
+                                                data-shares="{{ opp.suggested_position_size }}">
+                                            <i class="fas fa-plus me-1"></i>Buy
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-search fa-4x mb-4"></i>
+                        <h4>No Opportunities Found</h4>
+                        <p class="lead">Market conditions may not be favorable for trading right now.</p>
+                        <p>Our algorithm scans for penny stocks with:</p>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>Price between $0.01 - $5.00</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Volume > 100,000 shares</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Positive momentum > 5%</li>
+                        </ul>
+                        <button class="btn btn-primary mt-3" id="refreshOpportunities">
+                            <i class="fas fa-sync-alt me-2"></i>Try Again
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('scanOpportunities').addEventListener('click', function() {
+    window.location.reload();
+});
+
+document.getElementById('refreshOpportunities')?.addEventListener('click', function() {
+    window.location.reload();
+});
+</script>
+{% endblock %}

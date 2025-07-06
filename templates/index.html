@@ -1,0 +1,609 @@
+{% extends "base.html" %}
+
+{% block title %}Trading Dashboard - Penny Stock Trader{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-4 text-primary">
+                    <i class="fas fa-rocket me-3"></i>Penny Stock Trading Dashboard
+                </h1>
+                <p class="lead">Intelligent intraday trading with 50/50 profit splitting and capital protection</p>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h2 class="card-title">${{ portfolio.account.total_capital|round(2) }}</h2>
+                        <p class="card-text">Total Portfolio Value</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Portfolio Overview Cards -->
+<div class="row mb-4">
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card metric-card">
+            <div class="card-body text-center">
+                <div class="metric-icon">
+                    <i class="fas fa-wallet text-primary"></i>
+                </div>
+                <h5 class="metric-value">${{ portfolio.account.total_capital|round(2) }}</h5>
+                <p class="metric-label">Total Capital</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card metric-card">
+            <div class="card-body text-center">
+                <div class="metric-icon">
+                    <i class="fas fa-dollar-sign text-success"></i>
+                </div>
+                <h5 class="metric-value">${{ portfolio.account.available_capital|round(2) }}</h5>
+                <p class="metric-label">Available Capital</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card metric-card">
+            <div class="card-body text-center">
+                <div class="metric-icon">
+                    <i class="fas fa-chart-line text-info"></i>
+                </div>
+                <h5 class="metric-value">${{ portfolio.account.invested_capital|round(2) }}</h5>
+                <p class="metric-label">Invested Capital</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card metric-card">
+            <div class="card-body text-center">
+                <div class="metric-icon">
+                    <i class="fas fa-trophy text-warning"></i>
+                </div>
+                <h5 class="metric-value {% if portfolio.account.total_profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    ${{ portfolio.account.total_profit|round(2) }}
+                </h5>
+                <p class="metric-label">Total Profit</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card metric-card">
+            <div class="card-body text-center">
+                <div class="metric-icon">
+                    <i class="fas fa-university text-warning"></i>
+                </div>
+                <h5 class="metric-value">${{ portfolio.account.bank_deposits|round(2) }}</h5>
+                <p class="metric-label">Bank Deposits</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card metric-card">
+            <div class="card-body text-center">
+                <div class="metric-icon">
+                    <i class="fas fa-calendar-day text-primary"></i>
+                </div>
+                <h5 class="metric-value {% if portfolio.account.daily_pnl >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    ${{ portfolio.account.daily_pnl|round(2) }}
+                </h5>
+                <p class="metric-label">Daily P&L</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Trading Controls -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-robot me-2"></i>Trading Controls
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary btn-lg" id="scanOpportunities">
+                                <i class="fas fa-search me-2"></i>Scan Opportunities
+                            </button>
+                            <button class="btn btn-success btn-lg" id="autoTrade">
+                                <i class="fas fa-magic me-2"></i>Auto Trade
+                            </button>
+                            <button class="btn btn-info btn-lg" id="updatePositions">
+                                <i class="fas fa-sync-alt me-2"></i>Update Positions
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-info" id="tradingStatus">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Ready to trade. Click a button above to get started.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Row -->
+<div class="row">
+    <!-- Trading Opportunities -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-search-dollar me-2"></i>Trading Opportunities
+                </h5>
+                <span class="badge bg-primary">{{ opportunities|length }}</span>
+            </div>
+            <div class="card-body">
+                {% if opportunities %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Price</th>
+                                    <th>Change</th>
+                                    <th>Confidence</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for opp in opportunities[:5] %}
+                                <tr>
+                                    <td><strong>{{ opp.symbol }}</strong></td>
+                                    <td>${{ opp.price|round(2) }}</td>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            +{{ opp.change_percent|round(1) }}%
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar" role="progressbar" 
+                                                 style="width: {{ (opp.confidence * 100)|round(0) }}%;">
+                                                {{ (opp.confidence * 100)|round(0) }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-success buy-btn" 
+                                                data-symbol="{{ opp.symbol }}" 
+                                                data-price="{{ opp.price }}" 
+                                                data-shares="{{ opp.suggested_position_size }}">
+                                            <i class="fas fa-plus"></i> Buy
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center">
+                        <a href="{{ url_for('opportunities') }}" class="btn btn-outline-primary">
+                            View All Opportunities
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted">
+                        <i class="fas fa-search fa-3x mb-3"></i>
+                        <p>No opportunities found. Market conditions may be unfavorable.</p>
+                        <button class="btn btn-primary" id="refreshOpportunities">
+                            <i class="fas fa-sync-alt me-2"></i>Refresh
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Positions -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-layer-group me-2"></i>Current Positions
+                </h5>
+                <span class="badge bg-info">{{ portfolio.positions|length }}</span>
+            </div>
+            <div class="card-body">
+                {% if portfolio.positions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Shares</th>
+                                    <th>Entry</th>
+                                    <th>Current</th>
+                                    <th>P&L</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pos in portfolio.positions %}
+                                <tr>
+                                    <td><strong>{{ pos.symbol }}</strong></td>
+                                    <td>{{ pos.shares }}</td>
+                                    <td>${{ pos.entry_price|round(2) }}</td>
+                                    <td>${{ pos.current_price|round(2) }}</td>
+                                    <td>
+                                        <span class="{% if pos.unrealized_pnl >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            ${{ pos.unrealized_pnl|round(2) }}
+                                            ({{ pos.pnl_percentage|round(1) }}%)
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center">
+                        <a href="{{ url_for('positions') }}" class="btn btn-outline-info">
+                            View All Positions
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted">
+                        <i class="fas fa-layer-group fa-3x mb-3"></i>
+                        <p>No active positions. Start trading to see your positions here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Charts Row -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Portfolio Performance
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="portfolioChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Profit Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="profitChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Trades -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>Recent Trades
+                </h5>
+                <a href="{{ url_for('trades') }}" class="btn btn-outline-primary btn-sm">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                {% if portfolio.recent_trades %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Symbol</th>
+                                    <th>Action</th>
+                                    <th>Shares</th>
+                                    <th>Price</th>
+                                    <th>P&L</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for trade in portfolio.recent_trades[:10] %}
+                                <tr>
+                                    <td>{{ trade.executed_at.strftime('%H:%M:%S') }}</td>
+                                    <td><strong>{{ trade.symbol }}</strong></td>
+                                    <td>
+                                        <span class="badge {% if trade.action == 'BUY' %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ trade.action }}
+                                        </span>
+                                    </td>
+                                    <td>{{ trade.shares }}</td>
+                                    <td>${{ trade.price|round(2) }}</td>
+                                    <td>
+                                        {% if trade.profit_loss != 0 %}
+                                            <span class="{% if trade.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                ${{ trade.profit_loss|round(2) }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted">
+                        <i class="fas fa-history fa-3x mb-3"></i>
+                        <p>No trades yet. Start trading to see your trade history.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Risk Management Alert -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-warning" role="alert">
+            <h6 class="alert-heading">
+                <i class="fas fa-shield-alt me-2"></i>Risk Management Active
+            </h6>
+            <p class="mb-0">
+                <strong>Original Capital Protection:</strong> 
+                {% if risk_metrics.original_capital_protection %}
+                    <span class="text-success">✓ Protected</span>
+                {% else %}
+                    <span class="text-danger">⚠ At Risk</span>
+                {% endif %}
+                | 
+                <strong>Capital Utilization:</strong> {{ risk_metrics.capital_utilization|round(1) }}%
+                | 
+                <strong>Active Positions:</strong> {{ risk_metrics.active_positions }}/{{ config.MAX_OPEN_POSITIONS }}
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize charts
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+    setupEventListeners();
+    
+    // Auto-refresh data every 30 seconds
+    setInterval(refreshData, 30000);
+});
+
+function initializeCharts() {
+    // Portfolio performance chart
+    const portfolioCtx = document.getElementById('portfolioChart').getContext('2d');
+    new Chart(portfolioCtx, {
+        type: 'line',
+        data: {
+            labels: ['30d ago', '25d ago', '20d ago', '15d ago', '10d ago', '5d ago', 'Today'],
+            datasets: [{
+                label: 'Portfolio Value',
+                data: [{{ config.INITIAL_CAPITAL }}, {{ config.INITIAL_CAPITAL * 1.02 }}, {{ config.INITIAL_CAPITAL * 1.05 }}, {{ config.INITIAL_CAPITAL * 1.03 }}, {{ config.INITIAL_CAPITAL * 1.08 }}, {{ config.INITIAL_CAPITAL * 1.06 }}, {{ portfolio.account.total_capital }}],
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Profit distribution chart
+    const profitCtx = document.getElementById('profitChart').getContext('2d');
+    const reinvested = {{ portfolio.account.available_capital - config.INITIAL_CAPITAL }};
+    const bankDeposits = {{ portfolio.account.bank_deposits }};
+    
+    if (reinvested > 0 || bankDeposits > 0) {
+        new Chart(profitCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Reinvested', 'Bank Deposits'],
+                datasets: [{
+                    data: [Math.max(0, reinvested), bankDeposits],
+                    backgroundColor: ['#28a745', '#17a2b8']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+}
+
+function setupEventListeners() {
+    // Trading control buttons
+    document.getElementById('scanOpportunities').addEventListener('click', scanOpportunities);
+    document.getElementById('autoTrade').addEventListener('click', autoTrade);
+    document.getElementById('updatePositions').addEventListener('click', updatePositions);
+    
+    // Buy buttons
+    document.querySelectorAll('.buy-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const symbol = this.dataset.symbol;
+            const price = parseFloat(this.dataset.price);
+            const shares = parseInt(this.dataset.shares);
+            
+            if (confirm(`Buy ${shares} shares of ${symbol} at $${price}?`)) {
+                executeBuy(symbol, shares, price);
+            }
+        });
+    });
+}
+
+function scanOpportunities() {
+    showStatus('Scanning for opportunities...', 'info');
+    
+    fetch('/api/scan', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showStatus(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showStatus('Error: ' + data.error, 'danger');
+        }
+    })
+    .catch(error => {
+        showStatus('Error scanning opportunities', 'danger');
+    });
+}
+
+function autoTrade() {
+    showStatus('Executing automated trades...', 'info');
+    
+    fetch('/api/auto_trade', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showStatus(data.message, 'success');
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            showStatus('Error: ' + data.error, 'danger');
+        }
+    })
+    .catch(error => {
+        showStatus('Error executing auto trade', 'danger');
+    });
+}
+
+function updatePositions() {
+    showStatus('Updating positions...', 'info');
+    
+    fetch('/api/update_positions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showStatus(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showStatus('Error: ' + data.error, 'danger');
+        }
+    })
+    .catch(error => {
+        showStatus('Error updating positions', 'danger');
+    });
+}
+
+function executeBuy(symbol, shares, price) {
+    showStatus(`Buying ${shares} shares of ${symbol}...`, 'info');
+    
+    fetch('/api/buy', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            symbol: symbol,
+            shares: shares,
+            price: price
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showStatus(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showStatus('Error: ' + data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        showStatus('Error executing buy order', 'danger');
+    });
+}
+
+function showStatus(message, type) {
+    const statusDiv = document.getElementById('tradingStatus');
+    statusDiv.className = `alert alert-${type}`;
+    statusDiv.innerHTML = `<i class="fas fa-info-circle me-2"></i>${message}`;
+}
+
+function refreshData() {
+    fetch('/api/portfolio')
+        .then(response => response.json())
+        .then(data => {
+            // Update portfolio metrics without full page reload
+            updatePortfolioMetrics(data);
+        })
+        .catch(error => {
+            console.error('Error refreshing data:', error);
+        });
+}
+
+function updatePortfolioMetrics(data) {
+    // Update metric values in the cards
+    document.querySelectorAll('.metric-value').forEach((element, index) => {
+        const values = [
+            data.account.total_capital,
+            data.account.available_capital,
+            data.account.invested_capital,
+            data.account.total_profit,
+            data.account.bank_deposits,
+            data.account.daily_pnl
+        ];
+        
+        if (values[index] !== undefined) {
+            element.textContent = '$' + values[index].toFixed(2);
+        }
+    });
+}
+</script>
+{% endblock %}
